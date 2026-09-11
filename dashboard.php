@@ -40,6 +40,12 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
                 </a>
             </li>
             <li>
+                <a href="#" class="nav-item admin-only" data-tab="tab-academico">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"></path></svg>
+                    <span>Escuelas & Materias</span>
+                </a>
+            </li>
+            <li>
                 <a href="#" class="nav-item" data-tab="tab-profesor">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"></path><path d="M12 14l6.16-3.422A12.083 12.083 0 0112 21.5a12.083 12.083 0 01-6.16-10.922L12 14z"></path></svg>
                     <span>Carga de Notas</span>
@@ -48,7 +54,13 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
             <li>
                 <a href="#" class="nav-item admin-only" data-tab="tab-auditoria">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    <span>Auditoría & SHA-256</span>
+                    <span>Auditoría SHA-256</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-item admin-only" data-tab="tab-backup">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Respaldos & Backup</span>
                 </a>
             </li>
         </ul>
@@ -73,15 +85,15 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
             </div>
             <div class="glass-panel stat-card">
                 <span class="stat-title">Aspirantes Registrados</span>
-                <span class="stat-value">21</span>
+                <span class="stat-value" id="stat-leads-count">0</span>
             </div>
             <div class="glass-panel stat-card">
                 <span class="stat-title">Inscritos Definitivos</span>
-                <span class="stat-value" style="color: var(--success);">1</span>
+                <span class="stat-value" style="color: var(--success);" id="stat-inscriptos-count">0</span>
             </div>
             <div class="glass-panel stat-card">
                 <span class="stat-title">Escuelas Activas</span>
-                <span class="stat-value" style="color: var(--accent);">9</span>
+                <span class="stat-value" style="color: var(--accent);" id="stat-schools-count">9</span>
             </div>
         </div>
 
@@ -92,7 +104,10 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
                     <h1>Control de Gestión de Captación</h1>
                     <p>Seguimiento de aspirantes y control de las 7 banderas de inscripción</p>
                 </div>
-                <button class="btn btn-primary" id="btn-new-lead">+ Registrar Nuevo Aspirante</button>
+                <div style="display:flex; gap: 0.5rem;">
+                    <button class="btn btn-danger" id="btn-reset-zero">🗑️ Iniciar Registros en 0</button>
+                    <button class="btn btn-primary" id="btn-new-lead">+ Registrar Nuevo Aspirante</button>
+                </div>
             </div>
 
             <div class="glass-panel controls-bar">
@@ -159,7 +174,55 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
             </div>
         </section>
 
-        <!-- TAB 3: PORTAL PROFESORES - CARGA DE NOTAS -->
+        <!-- TAB 3: CRUD ESCUELAS Y MATERIAS -->
+        <section id="tab-academico" class="tab-content" style="display: none;">
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Gestión de Escuelas & Materias</h1>
+                    <p>CRUD de escuelas, carreras y asignación de materias a profesores</p>
+                </div>
+                <div style="display:flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" id="btn-new-school">+ Crear Escuela</button>
+                    <button class="btn btn-primary" id="btn-new-subject" style="background: linear-gradient(135deg, #10b981, #059669);">+ Crear Materia</button>
+                </div>
+            </div>
+
+            <h2 style="font-size: 1.2rem; margin-bottom: 1rem; color: #fff;">Escuelas / Carreras</h2>
+            <div class="glass-panel table-responsive" style="margin-bottom: 2rem;">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre de la Escuela</th>
+                            <th>Descripción</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schools-tbody">
+                        <!-- JS Render -->
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 style="font-size: 1.2rem; margin-bottom: 1rem; color: #fff;">Materias Asignadas</h2>
+            <div class="glass-panel table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre de Materia</th>
+                            <th>Profesor Asignado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjects-tbody">
+                        <!-- JS Render -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB 4: PORTAL PROFESORES - CARGA DE NOTAS -->
         <section id="tab-profesor" class="tab-content" style="display: none;">
             <div class="page-header">
                 <div class="page-title">
@@ -200,7 +263,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
             </div>
         </section>
 
-        <!-- TAB 4: AUDITORIA SUPER ADMIN -->
+        <!-- TAB 5: AUDITORIA SUPER ADMIN -->
         <section id="tab-auditoria" class="tab-content" style="display: none;">
             <div class="page-header">
                 <div class="page-title">
@@ -224,6 +287,41 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
                         <!-- Renderizado JS -->
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- TAB 6: RESPALDOS & BACKUP -->
+        <section id="tab-backup" class="tab-content" style="display: none;">
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Módulo de Respaldos & Restauración de Seguridad</h1>
+                    <p>Exportación de copias de seguridad en JSON/SQL y restauración del sistema</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <div class="glass-panel" style="padding: 2rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                    <h3 style="margin-bottom: 0.5rem; color: #fff;">Exportar Copia de Seguridad</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem;">
+                        Descargue un archivo `.json` encriptado con todas las tablas de captación, materias, notas y auditoría SHA-256.
+                    </p>
+                    <a href="api/backup.php?action=export" target="_blank" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                        ⬇️ Descargar Backup Completo
+                    </a>
+                </div>
+
+                <div class="glass-panel" style="padding: 2rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔄</div>
+                    <h3 style="margin-bottom: 0.5rem; color: #fff;">Restaurar Copia de Seguridad</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem;">
+                        Suba un archivo de respaldo previo para restaurar todos los registros y la estructura de datos.
+                    </p>
+                    <input type="file" id="backup-file-input" accept=".json" style="display:none;">
+                    <button class="btn btn-primary" id="btn-trigger-restore" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #10b981, #059669);">
+                        ⬆️ Restaurar desde Archivo JSON
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -292,6 +390,58 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
             <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Guardar Aspirante</button>
             </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Nueva Escuela -->
+<div class="modal-backdrop" id="modal-school">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Crear / Editar Escuela</h2>
+            <button class="close-btn" id="close-school-modal">&times;</button>
+        </div>
+        <form id="form-school">
+            <input type="hidden" name="id" id="school-id">
+            <div class="form-group">
+                <label>Código de Escuela *</label>
+                <input type="text" name="code" id="school-code" required placeholder="Ej. ING-SIST">
+            </div>
+            <div class="form-group">
+                <label>Nombre de la Escuela *</label>
+                <input type="text" name="name" id="school-name" required placeholder="Ej. Ingeniería de Sistemas">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="description" id="school-desc" rows="2" placeholder="Detalles de la carrera..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Guardar Escuela</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Nueva Materia -->
+<div class="modal-backdrop" id="modal-subject">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Crear / Editar Materia</h2>
+            <button class="close-btn" id="close-subject-modal">&times;</button>
+        </div>
+        <form id="form-subject">
+            <input type="hidden" name="id" id="subject-id">
+            <div class="form-group">
+                <label>Código de Materia *</label>
+                <input type="text" name="code" id="subject-code" required placeholder="Ej. SIS-101">
+            </div>
+            <div class="form-group">
+                <label>Nombre de la Materia *</label>
+                <input type="text" name="name" id="subject-name" required placeholder="Ej. Algoritmos I">
+            </div>
+            <div class="form-group">
+                <label>Profesor Asignado</label>
+                <input type="text" name="teacher_name" id="subject-teacher" placeholder="Ej. Prof. Manuel Alfonzo">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Guardar Materia</button>
         </form>
     </div>
 </div>

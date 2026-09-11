@@ -1,5 +1,6 @@
 // ============================================================================
 // SANTIAGO SOFTWARE - CLIENT JS CONTROLLER & INTERACTIVE ENGINE
+// Politécnico Santiago Mariño - Extensión Porlamar
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let currentUser = null;
+let allLeads = [];
+let allSchools = [];
+let allSubjects = [];
 
 function initApp() {
     checkCurrentUser();
@@ -20,17 +24,35 @@ function checkCurrentUser() {
         .then(data => {
             if (data.success && data.user) {
                 currentUser = data.user;
+                localStorage.setItem('santiago_user', JSON.stringify(data.user));
                 updateUserUI(data.user);
                 loadLeads();
                 loadReincorporaciones();
                 loadAcademic();
-                if (currentUser.role === 'admin') {
-                    loadAuditLogs();
-                }
+                if (currentUser.role === 'admin') loadAuditLogs();
             } else {
-                if (!window.location.pathname.endsWith('index.php') && window.location.pathname !== '/') {
+                const stored = localStorage.getItem('santiago_user');
+                if (stored) {
+                    currentUser = JSON.parse(stored);
+                    updateUserUI(currentUser);
+                    loadLeads();
+                    loadReincorporaciones();
+                    loadAcademic();
+                    if (currentUser.role === 'admin') loadAuditLogs();
+                } else if (!window.location.pathname.endsWith('index.php') && window.location.pathname !== '/') {
                     window.location.href = 'index.php';
                 }
+            }
+        })
+        .catch(() => {
+            const stored = localStorage.getItem('santiago_user');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                updateUserUI(currentUser);
+                loadLeads();
+                loadReincorporaciones();
+                loadAcademic();
+                if (currentUser.role === 'admin') loadAuditLogs();
             }
         });
 }
@@ -44,7 +66,6 @@ function updateUserUI(user) {
         roleEl.className = 'user-role-badge ' + (user.role === 'admin' ? 'badge-admin' : 'badge-profesor');
     }
     
-    // Ocultar o mostrar elementos según rol
     if (user.role !== 'admin') {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
         switchTab('tab-profesor');
@@ -77,8 +98,9 @@ function bindEvents() {
     const logoutBtn = document.getElementById('btn-logout');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('santiago_user');
             fetch('api/auth.php?action=logout')
-                .then(() => window.location.href = 'index.php');
+                .finally(() => window.location.href = 'index.php');
         });
     }
 
@@ -119,14 +141,140 @@ function bindEvents() {
         });
     }
 
+    // 1-Click Reset Registros en 0
+    const btnResetZero = document.getElementById('btn-reset-zero');
+    if (btnResetZero) {
+        btnResetZero.addEventListener('click', () => {
+            if (confirm('¿Está seguro de vaciar todos los registros de captación e iniciar en 0?')) {
+                fetch('api/backup.php?action=reset_zero')
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            loadLeads();
+                            loadReincorporaciones();
+                            showToast('Sistema inicializado en 0 registros');
+                        }
+                    });
+            }
+        });
+    }
+
+    // CRUD Escuelas Modales
+    const btnNewSchool = document.getElementById('btn-new-school');
+    const modalSchool = document.getElementById('modal-school');
+    const closeSchoolModal = document.getElementById('close-school-modal');
+    const formSchool = document.getElementById('form-school');
+
+    if (btnNewSchool && modalSchool) btnNewSchool.addEventListener('click', () => {
+        formSchool.reset();
+        document.getElementById('school-id').value = '';
+        modalSchool.classList.add('active');
+    });
+    if (closeSchoolModal && modalSchool) closeSchoolModal.addEventListener('click', () => modalSchool.classList.remove('active'));
+
+    if (formSchool) {
+        formSchool.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('school-id').value;
+            const code = document.getElementById('school-code').value;
+            const name = document.getElementById('school-name').value;
+            const desc = document.getElementById('school-desc').value;
+
+            fetch('api/academico.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'save_school', id, code, name, description: desc })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    modalSchool.classList.remove('active');
+                    loadAcademic();
+                    showToast('Escuela / Carrera guardada');
+                }
+            });
+        });
+    }
+
+    // CRUD Materias Modales
+    const btnNewSubject = document.getElementById('btn-new-subject');
+    const modalSubject = document.getElementById('modal-subject');
+    const closeSubjectModal = document.getElementById('close-subject-modal');
+    const formSubject = document.getElementById('form-subject');
+
+    if (btnNewSubject && modalSubject) btnNewSubject.addEventListener('click', () => {
+        formSubject.reset();
+        document.getElementById('subject-id').value = '';
+        modalSubject.classList.add('active');
+    });
+    if (closeSubjectModal && modalSubject) closeSubjectModal.addEventListener('click', () => modalSubject.classList.remove('active'));
+
+    if (formSubject) {
+        formSubject.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('subject-id').value;
+            const code = document.getElementById('subject-code').value;
+            const name = document.getElementById('subject-name').value;
+            const teacher = document.getElementById('subject-teacher').value;
+
+            fetch('api/academico.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'save_subject', id, code, name, teacher_name: teacher })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    modalSubject.classList.remove('active');
+                    loadAcademic();
+                    showToast('Materia guardada y asignada');
+                }
+            });
+        });
+    }
+
+    // Backup Restore Upload
+    const btnTriggerRestore = document.getElementById('btn-trigger-restore');
+    const backupInput = document.getElementById('backup-file-input');
+    if (btnTriggerRestore && backupInput) {
+        btnTriggerRestore.addEventListener('click', () => backupInput.click());
+        backupInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const json = JSON.parse(evt.target.result);
+                    fetch('api/backup.php?action=restore', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ backup_data: json })
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            loadLeads();
+                            loadReincorporaciones();
+                            loadAcademic();
+                            showToast('Backup restaurado con éxito');
+                        } else {
+                            alert(res.error);
+                        }
+                    });
+                } catch(err) {
+                    alert('Archivo JSON no válido.');
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
     // Filtros de búsqueda en captación
     const searchLead = document.getElementById('search-lead');
     if (searchLead) {
         searchLead.addEventListener('input', filterLeads);
     }
 }
-
-let allLeads = [];
 
 function loadLeads() {
     fetch('api/captacion.php')
@@ -135,8 +283,19 @@ function loadLeads() {
             if (data.success) {
                 allLeads = data.leads;
                 renderLeads(allLeads);
+                updateStats();
             }
         });
+}
+
+function updateStats() {
+    const leadsCount = document.getElementById('stat-leads-count');
+    const inscCount = document.getElementById('stat-inscriptos-count');
+    if (leadsCount) leadsCount.textContent = allLeads.length;
+    if (inscCount) {
+        const totalInsc = allLeads.filter(l => l.se_inscribio).length;
+        inscCount.textContent = totalInsc;
+    }
 }
 
 function renderLeads(leads) {
@@ -145,7 +304,7 @@ function renderLeads(leads) {
     tbody.innerHTML = '';
 
     if (leads.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color: var(--text-secondary); padding: 2rem;">No hay registros de aspirantes.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color: var(--text-secondary); padding: 3rem;">No hay registros de aspirantes. Haga clic en "+ Registrar Nuevo Aspirante" para comenzar.</td></tr>`;
         return;
     }
 
@@ -171,7 +330,6 @@ function renderLeads(leads) {
         tbody.appendChild(tr);
     });
 
-    // Eventos para cambiar checkboxes en tiempo real con auditoría
     tbody.querySelectorAll('.flag-checkbox').forEach(cb => {
         cb.addEventListener('change', (e) => {
             const id = e.target.getAttribute('data-id');
@@ -187,7 +345,8 @@ function renderLeads(leads) {
             .then(res => {
                 if (res.success) {
                     showToast('Estado actualizado y registrado en auditoría');
-                    if (currentUser.role === 'admin') loadAuditLogs();
+                    updateStats();
+                    if (currentUser && currentUser.role === 'admin') loadAuditLogs();
                 }
             });
         });
@@ -218,6 +377,11 @@ function renderReincorporaciones(list) {
     const tbody = document.getElementById('reinc-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem;">No hay estudiantes en lista de reincorporaciones.</td></tr>`;
+        return;
+    }
 
     list.forEach((r, i) => {
         const tr = document.createElement('tr');
@@ -257,6 +421,15 @@ function loadAcademic() {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
+                allSchools = data.schools;
+                allSubjects = data.subjects;
+
+                renderSchools(allSchools);
+                renderSubjects(allSubjects);
+
+                const schoolsCount = document.getElementById('stat-schools-count');
+                if (schoolsCount) schoolsCount.textContent = allSchools.length;
+
                 const selectSubject = document.getElementById('prof-subject-select');
                 if (selectSubject) {
                     selectSubject.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
@@ -270,6 +443,84 @@ function loadAcademic() {
                 }
             }
         });
+}
+
+function renderSchools(schools) {
+    const tbody = document.getElementById('schools-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    schools.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span class="hash-tag">${escapeHtml(s.code)}</span></td>
+            <td><strong>${escapeHtml(s.name)}</strong></td>
+            <td>${escapeHtml(s.description || '')}</td>
+            <td>
+                <button class="btn btn-danger btn-del-school" style="padding:0.3rem 0.6rem; font-size:0.8rem;" data-id="${s.id}">Borrar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('.btn-del-school').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (confirm('¿Borrar esta escuela?')) {
+                fetch('api/academico.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete_school', id })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        loadAcademic();
+                        showToast('Escuela eliminada');
+                    }
+                });
+            }
+        });
+    });
+}
+
+function renderSubjects(subjects) {
+    const tbody = document.getElementById('subjects-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    subjects.forEach(sub => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span class="hash-tag">${escapeHtml(sub.code)}</span></td>
+            <td><strong>${escapeHtml(sub.name)}</strong></td>
+            <td>${escapeHtml(sub.teacher_name || 'Prof. Manuel Alfonzo')}</td>
+            <td>
+                <button class="btn btn-danger btn-del-subject" style="padding:0.3rem 0.6rem; font-size:0.8rem;" data-id="${sub.id}">Borrar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('.btn-del-subject').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (confirm('¿Borrar esta materia?')) {
+                fetch('api/academico.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete_subject', id })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        loadAcademic();
+                        showToast('Materia eliminada');
+                    }
+                });
+            }
+        });
+    });
 }
 
 function loadGradesForSubject(subjectId) {
@@ -309,7 +560,6 @@ function renderGrades(grades) {
         `;
         tbody.appendChild(tr);
 
-        // Recálculo dinámico al teclear las notas
         const recalculate = () => {
             const c1 = parseFloat(tr.querySelector('.corta-1').value) || 0;
             const c2 = parseFloat(tr.querySelector('.corta-2').value) || 0;
@@ -346,7 +596,7 @@ function renderGrades(grades) {
                     span.textContent = res.grade.final_grade.toFixed(2) + ' pts';
                     span.className = 'final-val ' + (res.grade.final_grade >= 9.5 ? 'grade-approved' : 'grade-failed');
                     showToast('Calificación registrada y firmada en auditoría SHA-256');
-                    if (currentUser.role === 'admin') loadAuditLogs();
+                    if (currentUser && currentUser.role === 'admin') loadAuditLogs();
                 } else {
                     alert(res.error);
                 }
@@ -369,6 +619,11 @@ function renderAuditLogs(logs) {
     const tbody = document.getElementById('audit-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
+
+    if (logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 2rem;">No hay registros de auditoría.</td></tr>`;
+        return;
+    }
 
     logs.forEach(l => {
         const tr = document.createElement('tr');
@@ -394,7 +649,7 @@ function showToast(msg) {
 
     const toast = document.createElement('div');
     toast.className = 'glass-panel';
-    toast.style.cssText = 'padding: 1rem 1.5rem; border-left: 4px solid var(--success); color: #fff; background: rgba(15, 23, 42, 0.95); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; font-weight: 500; font-size: 0.9rem;';
+    toast.style.cssText = 'padding: 1rem 1.5rem; border-left: 4px solid var(--success); color: #fff; background: rgba(10, 17, 40, 0.95); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; font-weight: 500; font-size: 0.9rem; animate: fadeIn 0.3s;';
     toast.innerHTML = `✅ ${escapeHtml(msg)}`;
     container.appendChild(toast);
 
