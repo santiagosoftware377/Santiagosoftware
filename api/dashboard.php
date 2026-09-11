@@ -7,7 +7,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Santiago Software - Panel de Control & Gestión Académica</title>
+    <title>Politécnico Santiago Mariño - Control de Gestión & Portal Académico</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -18,8 +18,11 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
     <!-- Sidebar Navegación -->
     <aside class="sidebar">
         <div class="brand-header">
-            <div class="brand-logo">SS</div>
-            <div class="brand-title">Santiago Software</div>
+            <img src="assets/img/logo.png" alt="PSM Logo" class="brand-logo-img">
+            <div>
+                <div class="brand-title">Santiago Mariño</div>
+                <div class="brand-subtitle">Extensión Porlamar</div>
+            </div>
         </div>
 
         <ul class="nav-menu">

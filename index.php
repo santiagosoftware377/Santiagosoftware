@@ -6,19 +6,19 @@ require_once __DIR__ . '/api/config/security.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Santiago Software - Control de Gestión & Portal Académico</title>
+    <title>Politécnico Santiago Mariño - Control de Gestión & Portal Académico</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem;">
 
     <div class="glass-panel" style="width: 100%; max-width: 440px; padding: 2.5rem; text-align: center;">
-        <div style="width: 56px; height: 56px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1.25rem; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);">
-            SS
-        </div>
         
-        <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff;">Santiago Software</h1>
-        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 2rem;">Acceso al Sistema de Captación & Portal de Profesores</p>
+        <!-- Logo Institucional Politécnico Santiago Mariño -->
+        <img src="assets/img/logo.png" alt="Politécnico Santiago Mariño" class="login-logo-img">
+        
+        <h1 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.25rem; color: #fff;">Politécnico Santiago Mariño</h1>
+        <p style="color: var(--accent); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.5rem;">Extensión Porlamar</p>
 
         <form id="login-form">
             <div class="form-group" style="text-align: left;">
@@ -73,7 +73,6 @@ require_once __DIR__ . '/api/config/security.php';
                 }
             })
             .catch(() => {
-                // Fallback para login directo si cURL falla
                 const email = document.getElementById('login-email').value;
                 let userObj = { id: 'demo1', email: email, full_name: 'Administrador Principal', role: 'admin' };
                 if (email.includes('profesor')) {
