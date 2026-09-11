@@ -56,5 +56,4 @@ Sistema de Control de Gestión de Captación, Reincorporaciones, Estructura Acad
 
 ## 📦 Despliegue en Vercel
 
-Este proyecto contiene `vercel.json` preconfigurado con el runtime `@vercel/php`.
-Simplemente conecta este repositorio a Vercel para un despliegue automático en la nube.
+Este proyecto contiene `vercel.json` preconfigurado con el runtime `@vercel/php` y rutas en `/api/*.php`.
