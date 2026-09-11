@@ -19,7 +19,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
     <!-- Sidebar Navegación -->
     <aside class="sidebar">
         <div class="brand-header">
-            <img src="assets/img/logo_transparent.png" alt="PSM Emblem Logo" class="brand-logo-img">
+            <img src="assets/img/logo_emblem.png" alt="PSM Emblem Logo" class="brand-logo-img">
             <div>
                 <div class="brand-title">Santiago Mariño</div>
                 <div class="brand-subtitle">Extensión Porlamar</div>

@@ -15,8 +15,8 @@ require_once __DIR__ . '/api/config/security.php';
 
     <div class="glass-panel" style="width: 100%; max-width: 440px; padding: 2.5rem; text-align: center;">
         
-        <!-- Emblem Logo Recortado Politécnico Santiago Mariño -->
-        <img src="assets/img/logo_transparent.png" alt="Politécnico Santiago Mariño" class="login-logo-img">
+        <!-- Emblema Exclusivo sin letras Politécnico Santiago Mariño -->
+        <img src="assets/img/logo_emblem.png" alt="Emblema Politécnico Santiago Mariño" class="login-logo-img">
         
         <h1 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.25rem; color: #fff;">Politécnico Santiago Mariño</h1>
         <p style="color: var(--accent); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.5rem;">Extensión Porlamar</p>
