@@ -7,6 +7,7 @@ require_once __DIR__ . '/config/security.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Politécnico Santiago Mariño - Control de Gestión & Portal Académico</title>
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -14,11 +15,11 @@ require_once __DIR__ . '/config/security.php';
 
     <div class="glass-panel" style="width: 100%; max-width: 440px; padding: 2.5rem; text-align: center;">
         
-        <!-- Logo Institucional Politécnico Santiago Mariño -->
-        <img src="assets/img/logo.png" alt="Politécnico Santiago Mariño" class="login-logo-img">
+        <!-- Emblem Logo Recortado Politécnico Santiago Mariño -->
+        <img src="assets/img/logo_transparent.png" alt="Politécnico Santiago Mariño" class="login-logo-img">
         
-        <h1 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.25rem; color: #fff;">Politécnico Santiago Mariño</h1>
-        <p style="color: var(--accent); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.5rem;">Extensión Porlamar</p>
+        <h1 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.25rem; color: #fff;">Politécnico Santiago Mariño</h1>
+        <p style="color: var(--accent); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.5rem;">Extensión Porlamar</p>
 
         <form id="login-form">
             <div class="form-group" style="text-align: left;">

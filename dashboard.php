@@ -8,6 +8,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Politécnico Santiago Mariño - Control de Gestión & Portal Académico</title>
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -18,7 +19,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
     <!-- Sidebar Navegación -->
     <aside class="sidebar">
         <div class="brand-header">
-            <img src="assets/img/logo.png" alt="PSM Logo" class="brand-logo-img">
+            <img src="assets/img/logo_transparent.png" alt="PSM Emblem Logo" class="brand-logo-img">
             <div>
                 <div class="brand-title">Santiago Mariño</div>
                 <div class="brand-subtitle">Extensión Porlamar</div>
@@ -68,7 +69,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
         <div class="stats-grid">
             <div class="glass-panel stat-card">
                 <span class="stat-title">Período Académico Actual</span>
-                <span class="stat-value" style="color: var(--primary);">2026-2</span>
+                <span class="stat-value" style="color: var(--accent);">2026-2</span>
             </div>
             <div class="glass-panel stat-card">
                 <span class="stat-title">Aspirantes Registrados</span>
