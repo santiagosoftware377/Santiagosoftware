@@ -102,17 +102,37 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
             <div class="page-header">
                 <div class="page-title">
                     <h1>Control de Gestión de Captación</h1>
-                    <p>Seguimiento de aspirantes y control de las 7 banderas de inscripción</p>
+                    <p>Seguimiento de aspirantes y control interactivo de las 7 banderas de inscripción</p>
                 </div>
-                <div style="display:flex; gap: 0.5rem;">
+                <div style="display:flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button class="btn btn-danger" id="btn-reset-zero">🗑️ Iniciar Registros en 0</button>
                     <button class="btn btn-primary" id="btn-new-lead">+ Registrar Nuevo Aspirante</button>
                 </div>
             </div>
 
+            <!-- CRM Pipeline Metric Cards -->
+            <div class="crm-pipeline-grid">
+                <div class="pipeline-card">
+                    <span class="pipeline-title">Total Aspirantes</span>
+                    <span class="pipeline-value" id="pipe-crm-total" style="color: var(--accent);">0</span>
+                </div>
+                <div class="pipeline-card">
+                    <span class="pipeline-title">En Pre-Universitario</span>
+                    <span class="pipeline-value" id="pipe-crm-preuniv" style="color: var(--warning);">0</span>
+                </div>
+                <div class="pipeline-card">
+                    <span class="pipeline-title">Inscriptos Definitivos</span>
+                    <span class="pipeline-value" id="pipe-crm-inscriptos" style="color: var(--success);">0</span>
+                </div>
+                <div class="pipeline-card">
+                    <span class="pipeline-title">Con Dudas de Carrera</span>
+                    <span class="pipeline-value" id="pipe-crm-dudas" style="color: #f43f5e;">0</span>
+                </div>
+            </div>
+
             <div class="glass-panel controls-bar">
                 <input type="text" id="search-lead" class="search-input" placeholder="🔍 Buscar por Nombre, Cédula o Carrera..." style="width: 320px;">
-                <span style="font-size: 0.85rem; color: var(--text-secondary);">Período: <strong>2026-2</strong> | Responsable: <strong>Escuelas</strong></span>
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">Período: <strong>2026-2</strong> | Responsable: <strong>Escuelas & Captación</strong></span>
             </div>
 
             <div class="glass-panel table-responsive">
@@ -134,6 +154,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
                             <th style="text-align:center;">Carrera Definida</th>
                             <th style="text-align:center;">No Se Inscribirá</th>
                             <th style="text-align:center; color: var(--success);">SE INSCRIBIÓ</th>
+                            <th style="text-align:center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="leads-tbody">
@@ -150,6 +171,9 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
                     <h1>Control de Reincorporaciones</h1>
                     <p>Seguimiento a alumnos regulares para reingreso en el período 2026-2</p>
                 </div>
+                <div style="display:flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" id="btn-new-reinc">+ Registrar Reincorporación</button>
+                </div>
             </div>
 
             <div class="glass-panel table-responsive">
@@ -165,6 +189,7 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
                             <th>Estatus del Estudiante</th>
                             <th>Responsable</th>
                             <th style="text-align:center;">¿Se Inscribió?</th>
+                            <th style="text-align:center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="reinc-tbody">
@@ -420,31 +445,155 @@ $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario..
     </div>
 </div>
 
-<!-- Modal Nueva Materia -->
-<div class="modal-backdrop" id="modal-subject">
+<!-- Modal Editar Aspirante -->
+<div class="modal-backdrop" id="modal-edit-lead">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>Crear / Editar Materia</h2>
-            <button class="close-btn" id="close-subject-modal">&times;</button>
+            <h2>✏️ Editar Datos de Aspirante</h2>
+            <button class="close-btn" id="close-edit-lead-modal">&times;</button>
         </div>
-        <form id="form-subject">
-            <input type="hidden" name="id" id="subject-id">
+        <form id="form-edit-lead">
+            <input type="hidden" name="id" id="edit-lead-id">
             <div class="form-group">
-                <label>Código de Materia *</label>
-                <input type="text" name="code" id="subject-code" required placeholder="Ej. SIS-101">
+                <label>Nombres y Apellidos *</label>
+                <input type="text" name="full_name" id="edit-lead-fullname" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Cédula de Identidad</label>
+                    <input type="text" name="ci" id="edit-lead-ci">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono *</label>
+                    <input type="text" name="phone" id="edit-lead-phone" required>
+                </div>
             </div>
             <div class="form-group">
-                <label>Nombre de la Materia *</label>
-                <input type="text" name="name" id="subject-name" required placeholder="Ej. Algoritmos I">
+                <label>Correo Electrónico</label>
+                <input type="email" name="email" id="edit-lead-email">
             </div>
             <div class="form-group">
-                <label>Profesor Asignado</label>
-                <input type="text" name="teacher_name" id="subject-teacher" placeholder="Ej. Prof. Manuel Alfonzo">
+                <label>Carrera a Cursar</label>
+                <select name="carrera_cursar" id="edit-lead-carrera" class="select-input">
+                    <option value="Por Decidir">Por Decidir</option>
+                    <option value="Ingeniería Civil">Ingeniería Civil</option>
+                    <option value="Ingeniería Electrónica">Ingeniería Electrónica</option>
+                    <option value="Ingeniería Eléctrica">Ingeniería Eléctrica</option>
+                    <option value="Ingeniería de Sistemas">Ingeniería de Sistemas</option>
+                    <option value="Ingeniería Química">Ingeniería Química</option>
+                    <option value="Ingeniería Mecánica (Mtto)">Ingeniería Mecánica (Mtto)</option>
+                    <option value="Ingeniería Industrial">Ingeniería Industrial</option>
+                    <option value="Arquitectura">Arquitectura</option>
+                </select>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Guardar Materia</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Referido Por</label>
+                    <input type="text" name="referred_by" id="edit-lead-referred">
+                </div>
+                <div class="form-group">
+                    <label>Canal de Contacto</label>
+                    <select name="channel" id="edit-lead-channel" class="select-input">
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="LLAMADA">Llamada Telefónica</option>
+                        <option value="LLAMADA_WHATSAPP">Llamada WhatsApp</option>
+                        <option value="ATENCION_PERSONALIZADA">Atención Personalizada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Resultado / Notas del Contacto</label>
+                <textarea name="contact_result" id="edit-lead-result" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">💾 Actualizar Cambios</button>
         </form>
     </div>
 </div>
+
+<!-- Modal Ver Detalle Aspirante -->
+<div class="modal-backdrop" id="modal-view-lead">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>👁️ Expediente del Aspirante</h2>
+            <button class="close-btn" id="close-view-lead-modal">&times;</button>
+        </div>
+        <div id="view-lead-body" style="font-size: 0.95rem; line-height: 1.6; color: var(--text-primary);">
+            <!-- Renderizado dinámico JS -->
+        </div>
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <button class="btn btn-primary" id="btn-close-view-lead">Cerrar Expediente</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear / Editar Reincorporación -->
+<div class="modal-backdrop" id="modal-reinc">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2 id="modal-reinc-title">Registrar Reincorporación</h2>
+            <button class="close-btn" id="close-reinc-modal">&times;</button>
+        </div>
+        <form id="form-reinc">
+            <input type="hidden" name="id" id="reinc-id">
+            <div class="form-group">
+                <label>Nombres y Apellidos del Estudiante *</label>
+                <input type="text" name="full_name" id="reinc-fullname" required placeholder="Ej. Alondra Marval">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Cédula de Identidad</label>
+                    <input type="text" name="ci" id="reinc-ci" placeholder="V-28570556">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono *</label>
+                    <input type="text" name="phone" id="reinc-phone" required placeholder="0424-8966606">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Carrera</label>
+                <select name="carrera_cursar" id="reinc-carrera" class="select-input">
+                    <option value="Arquitectura">Arquitectura</option>
+                    <option value="Ingeniería Civil">Ingeniería Civil</option>
+                    <option value="Ingeniería Electrónica">Ingeniería Electrónica</option>
+                    <option value="Ingeniería Eléctrica">Ingeniería Eléctrica</option>
+                    <option value="Ingeniería de Sistemas">Ingeniería de Sistemas</option>
+                    <option value="Ingeniería Química">Ingeniería Química</option>
+                    <option value="Ingeniería Mecánica (Mtto)">Ingeniería Mecánica (Mtto)</option>
+                    <option value="Ingeniería Industrial">Ingeniería Industrial</option>
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Remitido Por</label>
+                    <input type="text" name="remitido_por" id="reinc-remitido" placeholder="JAVIER AMUNDARAY">
+                </div>
+                <div class="form-group">
+                    <label>Responsable</label>
+                    <input type="text" name="responsible" id="reinc-responsible" value="Manuel">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Estatus del Estudiante</label>
+                <input type="text" name="student_status" id="reinc-status" value="Reincorporación Regular (Por Inscribir)">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Guardar Reincorporación</button>
+        </form>
+    </div>
+</div>
+
+<!-- Auto-hiding Encapsulated Mini-Footer -->
+<footer id="system-mini-footer">
+    <div class="mini-footer-credits">
+        <span class="eng-badge">⚡ Ing. Oscar Franco</span>
+        <span class="eng-badge">⚡ Ing. Jesus Villalba</span>
+        <span style="opacity: 0.8; font-weight: 500;">Lead Software Architects</span>
+    </div>
+    <div class="mini-footer-meta">
+        <span>Politécnico Santiago Mariño — Extensión Porlamar</span>
+        <span style="color: var(--accent); font-weight: 700;">v2.4.0-PROD</span>
+        <span style="font-family: monospace; opacity: 0.6;" title="Verificado con Firma SHA-256">🔒 SHA-256 Verified</span>
+    </div>
+</footer>
 
 <script src="assets/js/app.js"></script>
 </body>

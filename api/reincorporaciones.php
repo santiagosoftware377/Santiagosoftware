@@ -103,4 +103,54 @@ if ($method === 'POST') {
         echo json_encode(['success' => true]);
         exit;
     }
+
+    if ($action === 'create') {
+        $newItem = [
+            'id' => sprintf('r%07x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000, mt_rand(0, 0xffff), mt_rand(0, 0xffff)),
+            'full_name' => trim($input['full_name'] ?? ''),
+            'ci' => trim($input['ci'] ?? ''),
+            'phone' => trim($input['phone'] ?? ''),
+            'email' => trim($input['email'] ?? ''),
+            'carrera_cursar' => trim($input['carrera_cursar'] ?? 'Por Decidir'),
+            'remitido_por' => trim($input['remitido_por'] ?? 'Atención al Estudiante'),
+            'student_status' => trim($input['student_status'] ?? 'Reincorporación Regular (Por Inscribir)'),
+            'responsible' => trim($input['responsible'] ?? 'Manuel'),
+            'se_inscribio' => false
+        ];
+        array_unshift($_SESSION['reincorporaciones'], $newItem);
+        log_audit('reincorporaciones', 'INSERT_REINCORPORACION', $newItem['id'], null, $newItem);
+        echo json_encode(['success' => true, 'item' => $newItem, 'reincorporaciones' => $_SESSION['reincorporaciones']]);
+        exit;
+    }
+
+    if ($action === 'update') {
+        $id = $input['id'] ?? '';
+        $updatedItem = null;
+        foreach ($_SESSION['reincorporaciones'] as &$item) {
+            if ($item['id'] === $id) {
+                $old = $item;
+                $item['full_name'] = trim($input['full_name'] ?? $item['full_name']);
+                $item['ci'] = trim($input['ci'] ?? $item['ci']);
+                $item['phone'] = trim($input['phone'] ?? $item['phone']);
+                $item['email'] = trim($input['email'] ?? $item['email']);
+                $item['carrera_cursar'] = trim($input['carrera_cursar'] ?? $item['carrera_cursar']);
+                $item['remitido_por'] = trim($input['remitido_por'] ?? $item['remitido_por']);
+                $item['student_status'] = trim($input['student_status'] ?? $item['student_status']);
+                $item['responsible'] = trim($input['responsible'] ?? $item['responsible']);
+                $updatedItem = $item;
+                log_audit('reincorporaciones', 'UPDATE_REINCORPORACION', $id, $old, $item);
+                break;
+            }
+        }
+        echo json_encode(['success' => true, 'item' => $updatedItem, 'reincorporaciones' => $_SESSION['reincorporaciones']]);
+        exit;
+    }
+
+    if ($action === 'delete') {
+        $id = $input['id'] ?? '';
+        $_SESSION['reincorporaciones'] = array_values(array_filter($_SESSION['reincorporaciones'], function($r) use ($id) { return $r['id'] !== $id; }));
+        log_audit('reincorporaciones', 'DELETE_REINCORPORACION', $id, null, null);
+        echo json_encode(['success' => true, 'reincorporaciones' => $_SESSION['reincorporaciones']]);
+        exit;
+    }
 }

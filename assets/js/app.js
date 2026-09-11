@@ -1,15 +1,18 @@
 // ============================================================================
-// SANTIAGO SOFTWARE - CLIENT JS CONTROLLER & INTERACTIVE ENGINE
+// SANTIAGO SOFTWARE - CLIENT JS CONTROLLER & INTERACTIVE ENGINE v2.4.0
 // Politécnico Santiago Mariño - Extensión Porlamar
+// Software Architects: Ing. Oscar Franco & Ing. Jesus Villalba
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     initApp();
+    initMiniFooter();
 });
 
 let currentUser = null;
 let allLeads = [];
+let allReincorporaciones = [];
 let allSchools = [];
 let allSubjects = [];
 
@@ -136,6 +139,84 @@ function bindEvents() {
                     showToast('Aspirante registrado exitosamente con auditoría SHA-256');
                 } else {
                     alert(res.error || 'Error al guardar');
+                }
+            });
+        });
+    }
+
+    // Modal Editar Aspirante
+    const modalEditLead = document.getElementById('modal-edit-lead');
+    const closeEditLeadModal = document.getElementById('close-edit-lead-modal');
+    const formEditLead = document.getElementById('form-edit-lead');
+    if (closeEditLeadModal && modalEditLead) {
+        closeEditLeadModal.addEventListener('click', () => modalEditLead.classList.remove('active'));
+    }
+    if (formEditLead) {
+        formEditLead.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(formEditLead);
+            formData.append('action', 'update');
+            fetch('api/captacion.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    modalEditLead.classList.remove('active');
+                    loadLeads();
+                    showToast('Aspirante actualizado exitosamente');
+                } else {
+                    alert(res.error || 'Error al actualizar');
+                }
+            });
+        });
+    }
+
+    // Modal Ver Detalle Aspirante
+    const modalViewLead = document.getElementById('modal-view-lead');
+    const closeViewLeadModal = document.getElementById('close-view-lead-modal');
+    const btnCloseViewLead = document.getElementById('btn-close-view-lead');
+    if (closeViewLeadModal && modalViewLead) {
+        closeViewLeadModal.addEventListener('click', () => modalViewLead.classList.remove('active'));
+    }
+    if (btnCloseViewLead && modalViewLead) {
+        btnCloseViewLead.addEventListener('click', () => modalViewLead.classList.remove('active'));
+    }
+
+    // Modal Reincorporaciones
+    const btnNewReinc = document.getElementById('btn-new-reinc');
+    const modalReinc = document.getElementById('modal-reinc');
+    const closeReincModal = document.getElementById('close-reinc-modal');
+    const formReinc = document.getElementById('form-reinc');
+    if (btnNewReinc && modalReinc) {
+        btnNewReinc.addEventListener('click', () => {
+            formReinc.reset();
+            document.getElementById('reinc-id').value = '';
+            document.getElementById('modal-reinc-title').textContent = 'Registrar Reincorporación';
+            modalReinc.classList.add('active');
+        });
+    }
+    if (closeReincModal && modalReinc) {
+        closeReincModal.addEventListener('click', () => modalReinc.classList.remove('active'));
+    }
+    if (formReinc) {
+        formReinc.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('reinc-id').value;
+            const action = id ? 'update' : 'create';
+            const formData = new FormData(formReinc);
+            formData.append('action', action);
+            fetch('api/reincorporaciones.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    modalReinc.classList.remove('active');
+                    loadReincorporaciones();
+                    showToast(id ? 'Reincorporación actualizada' : 'Reincorporación registrada');
                 }
             });
         });
@@ -291,11 +372,21 @@ function loadLeads() {
 function updateStats() {
     const leadsCount = document.getElementById('stat-leads-count');
     const inscCount = document.getElementById('stat-inscriptos-count');
+    const pipeTotal = document.getElementById('pipe-crm-total');
+    const pipePreuniv = document.getElementById('pipe-crm-preuniv');
+    const pipeInsc = document.getElementById('pipe-crm-inscriptos');
+    const pipeDudas = document.getElementById('pipe-crm-dudas');
+
+    const totalInsc = allLeads.filter(l => l.se_inscribio).length;
+    const totalPreuniv = allLeads.filter(l => l.se_inscribio_pre_universitario || l.asistio_pre_universitario).length;
+    const totalDudas = allLeads.filter(l => l.tiene_dudas_carrera).length;
+
     if (leadsCount) leadsCount.textContent = allLeads.length;
-    if (inscCount) {
-        const totalInsc = allLeads.filter(l => l.se_inscribio).length;
-        inscCount.textContent = totalInsc;
-    }
+    if (inscCount) inscCount.textContent = totalInsc;
+    if (pipeTotal) pipeTotal.textContent = allLeads.length;
+    if (pipePreuniv) pipePreuniv.textContent = totalPreuniv;
+    if (pipeInsc) pipeInsc.textContent = totalInsc;
+    if (pipeDudas) pipeDudas.textContent = totalDudas;
 }
 
 function renderLeads(leads) {
@@ -304,7 +395,7 @@ function renderLeads(leads) {
     tbody.innerHTML = '';
 
     if (leads.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color: var(--text-secondary); padding: 3rem;">No hay registros de aspirantes. Haga clic en "+ Registrar Nuevo Aspirante" para comenzar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16" style="text-align:center; color: var(--text-secondary); padding: 3rem;">No hay registros de aspirantes. Haga clic en "+ Registrar Nuevo Aspirante" para comenzar.</td></tr>`;
         return;
     }
 
@@ -326,6 +417,13 @@ function renderLeads(leads) {
             <td style="text-align:center;"><input type="checkbox" class="flag-checkbox" data-id="${l.id}" data-flag="ya_tiene_definida_carrera" ${l.ya_tiene_definida_carrera ? 'checked' : ''}></td>
             <td style="text-align:center;"><input type="checkbox" class="flag-checkbox" data-id="${l.id}" data-flag="manifesto_no_inscribirse" ${l.manifesto_no_inscribirse ? 'checked' : ''}></td>
             <td style="text-align:center;"><input type="checkbox" class="flag-checkbox" data-id="${l.id}" data-flag="se_inscribio" ${l.se_inscribio ? 'checked' : ''}></td>
+            <td style="text-align:center;">
+                <div class="btn-action-group">
+                    <button class="btn-action-icon btn-action-view btn-view-lead" data-id="${l.id}" title="Ver Expediente Completo">👁️</button>
+                    <button class="btn-action-icon btn-action-edit btn-edit-lead" data-id="${l.id}" title="Editar Aspirante">✏️</button>
+                    <button class="btn-action-icon btn-action-delete btn-del-lead" data-id="${l.id}" title="Eliminar Registro">🗑️</button>
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -345,10 +443,76 @@ function renderLeads(leads) {
             .then(res => {
                 if (res.success) {
                     showToast('Estado actualizado y registrado en auditoría');
+                    const item = allLeads.find(x => x.id === id);
+                    if (item) item[flag] = value;
                     updateStats();
                     if (currentUser && currentUser.role === 'admin') loadAuditLogs();
                 }
             });
+        });
+    });
+
+    tbody.querySelectorAll('.btn-view-lead').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const l = allLeads.find(x => x.id === id);
+            if (!l) return;
+            const body = document.getElementById('view-lead-body');
+            body.innerHTML = `
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div><strong>Nombre:</strong> ${escapeHtml(l.full_name)}</div>
+                    <div><strong>Cédula:</strong> ${escapeHtml(l.ci || 'N/A')}</div>
+                    <div><strong>Teléfono:</strong> ${escapeHtml(l.phone || 'N/A')}</div>
+                    <div><strong>Correo:</strong> ${escapeHtml(l.email || 'N/A')}</div>
+                    <div><strong>Carrera a Cursar:</strong> ${escapeHtml(l.carrera_cursar)}</div>
+                    <div><strong>Referido Por:</strong> ${escapeHtml(l.referred_by || 'N/A')}</div>
+                    <div><strong>Canal:</strong> ${escapeHtml(l.channel || 'WhatsApp')}</div>
+                    <div><strong>Período:</strong> ${escapeHtml(l.period || '2026-2')}</div>
+                </div>
+                <div style="background: rgba(10, 17, 40, 0.6); padding: 1rem; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <strong>Comentarios / Resultado del Contacto:</strong><br>
+                    <p style="margin-top: 0.5rem; color: var(--text-secondary);">${escapeHtml(l.contact_result || 'Sin observaciones registradas.')}</p>
+                </div>
+            `;
+            document.getElementById('modal-view-lead').classList.add('active');
+        });
+    });
+
+    tbody.querySelectorAll('.btn-edit-lead').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const l = allLeads.find(x => x.id === id);
+            if (!l) return;
+            document.getElementById('edit-lead-id').value = l.id;
+            document.getElementById('edit-lead-fullname').value = l.full_name || '';
+            document.getElementById('edit-lead-ci').value = l.ci || '';
+            document.getElementById('edit-lead-phone').value = l.phone || '';
+            document.getElementById('edit-lead-email').value = l.email || '';
+            document.getElementById('edit-lead-carrera').value = l.carrera_cursar || 'Por Decidir';
+            document.getElementById('edit-lead-referred').value = l.referred_by || '';
+            document.getElementById('edit-lead-channel').value = l.channel || 'WhatsApp';
+            document.getElementById('edit-lead-result').value = l.contact_result || '';
+            document.getElementById('modal-edit-lead').classList.add('active');
+        });
+    });
+
+    tbody.querySelectorAll('.btn-del-lead').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            if (confirm('¿Está seguro de eliminar este registro de aspirante?')) {
+                fetch('api/captacion.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', id })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        loadLeads();
+                        showToast('Aspirante eliminado');
+                    }
+                });
+            }
         });
     });
 }
@@ -368,7 +532,8 @@ function loadReincorporaciones() {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                renderReincorporaciones(data.reincorporaciones);
+                allReincorporaciones = data.reincorporaciones;
+                renderReincorporaciones(allReincorporaciones);
             }
         });
 }
@@ -379,7 +544,7 @@ function renderReincorporaciones(list) {
     tbody.innerHTML = '';
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem;">No hay estudiantes en lista de reincorporaciones.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 2rem;">No hay estudiantes en lista de reincorporaciones.</td></tr>`;
         return;
     }
 
@@ -395,6 +560,12 @@ function renderReincorporaciones(list) {
             <td><span class="user-role-badge badge-profesor">${escapeHtml(r.student_status || '')}</span></td>
             <td><strong>${escapeHtml(r.responsible || 'Manuel')}</strong></td>
             <td style="text-align:center;"><input type="checkbox" class="reinc-checkbox" data-id="${r.id}" ${r.se_inscribio ? 'checked' : ''}></td>
+            <td style="text-align:center;">
+                <div class="btn-action-group">
+                    <button class="btn-action-icon btn-action-edit btn-edit-reinc" data-id="${r.id}" title="Editar Reincorporación">✏️</button>
+                    <button class="btn-action-icon btn-action-delete btn-del-reinc" data-id="${r.id}" title="Eliminar Registro">🗑️</button>
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -412,6 +583,44 @@ function renderReincorporaciones(list) {
             .then(res => {
                 if (res.success) showToast('Reincorporación actualizada');
             });
+        });
+    });
+
+    tbody.querySelectorAll('.btn-edit-reinc').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const r = allReincorporaciones.find(x => x.id === id);
+            if (!r) return;
+            document.getElementById('reinc-id').value = r.id;
+            document.getElementById('reinc-fullname').value = r.full_name || '';
+            document.getElementById('reinc-ci').value = r.ci || '';
+            document.getElementById('reinc-phone').value = r.phone || '';
+            document.getElementById('reinc-carrera').value = r.carrera_cursar || 'Arquitectura';
+            document.getElementById('reinc-remitido').value = r.remitido_por || '';
+            document.getElementById('reinc-responsible').value = r.responsible || 'Manuel';
+            document.getElementById('reinc-status').value = r.student_status || '';
+            document.getElementById('modal-reinc-title').textContent = '✏️ Editar Reincorporación';
+            document.getElementById('modal-reinc').classList.add('active');
+        });
+    });
+
+    tbody.querySelectorAll('.btn-del-reinc').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            if (confirm('¿Eliminar este registro de reincorporación?')) {
+                fetch('api/reincorporaciones.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', id })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        loadReincorporaciones();
+                        showToast('Reincorporación eliminada');
+                    }
+                });
+            }
         });
     });
 }
@@ -457,15 +666,31 @@ function renderSchools(schools) {
             <td><strong>${escapeHtml(s.name)}</strong></td>
             <td>${escapeHtml(s.description || '')}</td>
             <td>
-                <button class="btn btn-danger btn-del-school" style="padding:0.3rem 0.6rem; font-size:0.8rem;" data-id="${s.id}">Borrar</button>
+                <div class="btn-action-group">
+                    <button class="btn-action-icon btn-action-edit btn-edit-school" data-id="${s.id}" title="Editar Escuela">✏️</button>
+                    <button class="btn-action-icon btn-action-delete btn-del-school" data-id="${s.id}" title="Eliminar Escuela">🗑️</button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
     });
 
+    tbody.querySelectorAll('.btn-edit-school').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const s = allSchools.find(x => x.id === id);
+            if (!s) return;
+            document.getElementById('school-id').value = s.id;
+            document.getElementById('school-code').value = s.code;
+            document.getElementById('school-name').value = s.name;
+            document.getElementById('school-desc').value = s.description || '';
+            document.getElementById('modal-school').classList.add('active');
+        });
+    });
+
     tbody.querySelectorAll('.btn-del-school').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
+            const id = e.currentTarget.getAttribute('data-id');
             if (confirm('¿Borrar esta escuela?')) {
                 fetch('api/academico.php', {
                     method: 'POST',
@@ -496,15 +721,31 @@ function renderSubjects(subjects) {
             <td><strong>${escapeHtml(sub.name)}</strong></td>
             <td>${escapeHtml(sub.teacher_name || 'Prof. Manuel Alfonzo')}</td>
             <td>
-                <button class="btn btn-danger btn-del-subject" style="padding:0.3rem 0.6rem; font-size:0.8rem;" data-id="${sub.id}">Borrar</button>
+                <div class="btn-action-group">
+                    <button class="btn-action-icon btn-action-edit btn-edit-subject" data-id="${sub.id}" title="Editar Materia">✏️</button>
+                    <button class="btn-action-icon btn-action-delete btn-del-subject" data-id="${sub.id}" title="Eliminar Materia">🗑️</button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
     });
 
+    tbody.querySelectorAll('.btn-edit-subject').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const sub = allSubjects.find(x => x.id === id);
+            if (!sub) return;
+            document.getElementById('subject-id').value = sub.id;
+            document.getElementById('subject-code').value = sub.code;
+            document.getElementById('subject-name').value = sub.name;
+            document.getElementById('subject-teacher').value = sub.teacher_name || '';
+            document.getElementById('modal-subject').classList.add('active');
+        });
+    });
+
     tbody.querySelectorAll('.btn-del-subject').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
+            const id = e.currentTarget.getAttribute('data-id');
             if (confirm('¿Borrar esta materia?')) {
                 fetch('api/academico.php', {
                     method: 'POST',
@@ -638,6 +879,64 @@ function renderAuditLogs(logs) {
     });
 }
 
+// ============================================================================
+// ENCAPSULATED AUTO-HIDING MINI FOOTER ENGINE
+// Protected Credits: Ing. Oscar Franco & Ing. Jesus Villalba
+// ============================================================================
+function initMiniFooter() {
+    const footerObj = Object.freeze({
+        architects: ['Ing. Oscar Franco', 'Ing. Jesus Villalba'],
+        institution: 'Politécnico Santiago Mariño — Extensión Porlamar',
+        version: 'v2.4.0-PROD'
+    });
+
+    let lastScrollY = window.scrollY;
+    const footer = document.getElementById('system-mini-footer');
+    if (!footer) return;
+
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        if (currentScrollY > lastScrollY && currentScrollY > 60) {
+            footer.classList.add('mini-footer-hidden');
+        } else {
+            footer.classList.remove('mini-footer-hidden');
+        }
+        lastScrollY = currentScrollY;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (window.innerHeight - e.clientY < 70) {
+            footer.classList.remove('mini-footer-hidden');
+        }
+    });
+
+    // Anti-tamper Observer
+    const observer = new MutationObserver(() => {
+        if (!document.getElementById('system-mini-footer')) {
+            recreateFooter(footerObj);
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function recreateFooter(info) {
+    const f = document.createElement('footer');
+    f.id = 'system-mini-footer';
+    f.innerHTML = `
+        <div class="mini-footer-credits">
+            <span class="eng-badge">⚡ ${info.architects[0]}</span>
+            <span class="eng-badge">⚡ ${info.architects[1]}</span>
+            <span style="opacity: 0.8; font-weight: 500;">Lead Software Architects</span>
+        </div>
+        <div class="mini-footer-meta">
+            <span>${info.institution}</span>
+            <span style="color: var(--accent); font-weight: 700;">${info.version}</span>
+            <span style="font-family: monospace; opacity: 0.6;">🔒 SHA-256 Verified</span>
+        </div>
+    `;
+    document.body.appendChild(f);
+}
+
 function showToast(msg) {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -649,7 +948,7 @@ function showToast(msg) {
 
     const toast = document.createElement('div');
     toast.className = 'glass-panel';
-    toast.style.cssText = 'padding: 1rem 1.5rem; border-left: 4px solid var(--success); color: #fff; background: rgba(10, 17, 40, 0.95); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; font-weight: 500; font-size: 0.9rem; animate: fadeIn 0.3s;';
+    toast.style.cssText = 'padding: 1rem 1.5rem; border-left: 4px solid var(--success); color: #fff; background: rgba(10, 17, 40, 0.95); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; font-weight: 500; font-size: 0.9rem; animation: fadeIn 0.3s;';
     toast.innerHTML = `✅ ${escapeHtml(msg)}`;
     container.appendChild(toast);
 

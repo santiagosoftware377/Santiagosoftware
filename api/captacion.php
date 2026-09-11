@@ -310,9 +310,38 @@ if ($method === 'POST') {
         exit;
     }
     
+    if ($action === 'update') {
+        $id = $input['id'] ?? '';
+        $updatedItem = null;
+        foreach ($_SESSION['leads'] as &$lead) {
+            if ($lead['id'] === $id) {
+                $oldData = $lead;
+                $lead['full_name'] = trim($input['full_name'] ?? $lead['full_name']);
+                $lead['ci'] = trim($input['ci'] ?? $lead['ci']);
+                $lead['phone'] = trim($input['phone'] ?? $lead['phone']);
+                $lead['email'] = trim($input['email'] ?? $lead['email']);
+                $lead['carrera_cursar'] = trim($input['carrera_cursar'] ?? $lead['carrera_cursar']);
+                $lead['referred_by'] = trim($input['referred_by'] ?? $lead['referred_by']);
+                $lead['channel'] = trim($input['channel'] ?? $lead['channel']);
+                $lead['contact_result'] = trim($input['contact_result'] ?? $lead['contact_result']);
+                $updatedItem = $lead;
+                log_audit('leads', 'UPDATE_LEAD', $id, $oldData, $lead);
+                break;
+            }
+        }
+        
+        if ($updatedItem) {
+            supabase_request('PATCH', 'leads?id=eq.' . urlencode($id), $updatedItem);
+            echo json_encode(['success' => true, 'lead' => $updatedItem]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Aspirante no encontrado para actualizar.']);
+        }
+        exit;
+    }
+
     if ($action === 'delete') {
         $id = $input['id'] ?? '';
-        $_SESSION['leads'] = array_filter($_SESSION['leads'], function($l) use ($id) { return $l['id'] !== $id; });
+        $_SESSION['leads'] = array_values(array_filter($_SESSION['leads'], function($l) use ($id) { return $l['id'] !== $id; }));
         supabase_request('DELETE', 'leads?id=eq.' . urlencode($id));
         log_audit('leads', 'DELETE', $id, null, null);
         echo json_encode(['success' => true]);
