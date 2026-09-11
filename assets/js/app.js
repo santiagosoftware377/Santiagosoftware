@@ -294,17 +294,35 @@ function renderGrades(grades) {
 
     grades.forEach(g => {
         const tr = document.createElement('tr');
+        const isApproved = g.final_grade >= 9.5;
+        const pillClass = isApproved ? 'grade-approved' : 'grade-failed';
+
         tr.innerHTML = `
             <td><strong>${escapeHtml(g.student_name)}</strong></td>
             <td>${escapeHtml(g.student_ci)}</td>
             <td><input type="number" step="0.5" min="0" max="20" class="search-input corta-1" style="width: 80px;" value="${g.corta1}" data-id="${g.id}"></td>
             <td><input type="number" step="0.5" min="0" max="20" class="search-input corta-2" style="width: 80px;" value="${g.corta2}" data-id="${g.id}"></td>
             <td><input type="number" step="0.5" min="0" max="20" class="search-input corta-3" style="width: 80px;" value="${g.corta3}" data-id="${g.id}"></td>
-            <td><strong class="final-val" style="font-size: 1.1rem; color: var(--accent);">${g.final_grade.toFixed(2)}</strong></td>
+            <td><span class="final-val ${pillClass}">${g.final_grade.toFixed(2)} pts</span></td>
             <td><input type="text" class="search-input obs-val" style="width: 100%;" value="${escapeHtml(g.observations || '')}"></td>
             <td><button class="btn btn-primary btn-save-grade" data-id="${g.id}">Guardar</button></td>
         `;
         tbody.appendChild(tr);
+
+        // Recálculo dinámico al teclear las notas
+        const recalculate = () => {
+            const c1 = parseFloat(tr.querySelector('.corta-1').value) || 0;
+            const c2 = parseFloat(tr.querySelector('.corta-2').value) || 0;
+            const c3 = parseFloat(tr.querySelector('.corta-3').value) || 0;
+            const finalVal = (c1 * 0.3) + (c2 * 0.3) + (c3 * 0.4);
+            const span = tr.querySelector('.final-val');
+            span.textContent = finalVal.toFixed(2) + ' pts';
+            span.className = 'final-val ' + (finalVal >= 9.5 ? 'grade-approved' : 'grade-failed');
+        };
+
+        tr.querySelector('.corta-1').addEventListener('input', recalculate);
+        tr.querySelector('.corta-2').addEventListener('input', recalculate);
+        tr.querySelector('.corta-3').addEventListener('input', recalculate);
     });
 
     tbody.querySelectorAll('.btn-save-grade').forEach(btn => {
@@ -324,7 +342,9 @@ function renderGrades(grades) {
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
-                    tr.querySelector('.final-val').textContent = res.grade.final_grade.toFixed(2);
+                    const span = tr.querySelector('.final-val');
+                    span.textContent = res.grade.final_grade.toFixed(2) + ' pts';
+                    span.className = 'final-val ' + (res.grade.final_grade >= 9.5 ? 'grade-approved' : 'grade-failed');
                     showToast('Calificación registrada y firmada en auditoría SHA-256');
                     if (currentUser.role === 'admin') loadAuditLogs();
                 } else {
@@ -357,7 +377,7 @@ function renderAuditLogs(logs) {
             <td><span class="user-role-badge badge-admin">${escapeHtml(l.action)}</span></td>
             <td><strong>${escapeHtml(l.table_name)}</strong></td>
             <td>${escapeHtml(l.user_email || 'sistema')} (${escapeHtml(l.user_role || 'guest')})</td>
-            <td><span class="hash-tag" title="${l.hash_checksum}">${l.hash_checksum.substring(0, 16)}...</span></td>
+            <td><span class="hash-tag" title="Firmado SHA-256: ${l.hash_checksum}">${l.hash_checksum.substring(0, 16)}...</span></td>
         `;
         tbody.appendChild(tr);
     });
@@ -368,13 +388,13 @@ function showToast(msg) {
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
-        container.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:100px;';
+        container.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;';
         document.body.appendChild(container);
     }
 
     const toast = document.createElement('div');
     toast.className = 'glass-panel';
-    toast.style.cssText = 'padding: 1rem 1.5rem; border-left: 4px solid var(--success); color: #fff; background: rgba(15, 23, 42, 0.95); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; font-weight: 500; font-size: 0.9rem; animate: fadeIn 0.3s;';
+    toast.style.cssText = 'padding: 1rem 1.5rem; border-left: 4px solid var(--success); color: #fff; background: rgba(15, 23, 42, 0.95); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; font-weight: 500; font-size: 0.9rem;';
     toast.innerHTML = `✅ ${escapeHtml(msg)}`;
     container.appendChild(toast);
 
