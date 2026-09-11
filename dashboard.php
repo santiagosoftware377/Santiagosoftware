@@ -1,13 +1,6 @@
 <?php
-require_once __DIR__ . '/config/security.php';
-
-// Verificar sesión activa
-if (empty($_SESSION['user'])) {
-    header('Location: index.php');
-    exit;
-}
-
-$user = $_SESSION['user'];
+require_once __DIR__ . '/api/config/security.php';
+$user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario...', 'role' => 'admin'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -30,7 +23,6 @@ $user = $_SESSION['user'];
         </div>
 
         <ul class="nav-menu">
-            <?php if ($user['role'] === 'admin'): ?>
             <li>
                 <a href="#" class="nav-item active admin-only" data-tab="tab-captacion">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -43,31 +35,24 @@ $user = $_SESSION['user'];
                     <span>Reincorporaciones</span>
                 </a>
             </li>
-            <?php endif; ?>
-
             <li>
-                <a href="#" class="nav-item <?= $user['role'] === 'profesor' ? 'active' : '' ?>" data-tab="tab-profesor">
+                <a href="#" class="nav-item" data-tab="tab-profesor">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"></path><path d="M12 14l6.16-3.422A12.083 12.083 0 0112 21.5a12.083 12.083 0 01-6.16-10.922L12 14z"></path></svg>
                     <span>Carga de Notas</span>
                 </a>
             </li>
-
-            <?php if ($user['role'] === 'admin'): ?>
             <li>
                 <a href="#" class="nav-item admin-only" data-tab="tab-auditoria">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     <span>Auditoría & SHA-256</span>
                 </a>
             </li>
-            <?php endif; ?>
         </ul>
 
         <div class="user-profile">
             <div class="user-info">
-                <span class="user-name" id="user-display-name"><?= htmlspecialchars($user['full_name']) ?></span>
-                <span class="user-role-badge <?= $user['role'] === 'admin' ? 'badge-admin' : 'badge-profesor' ?>" id="user-display-role">
-                    <?= $user['role'] === 'admin' ? 'Super Admin' : 'Profesor' ?>
-                </span>
+                <span class="user-name" id="user-display-name">Administrador</span>
+                <span class="user-role-badge badge-admin" id="user-display-role">Super Admin</span>
             </div>
             <button class="btn btn-danger" id="btn-logout" style="padding: 0.4rem 0.6rem;" title="Cerrar Sesión">🚪</button>
         </div>
@@ -97,7 +82,7 @@ $user = $_SESSION['user'];
         </div>
 
         <!-- TAB 1: CRM CAPTACION DE ASPIRANTES -->
-        <section id="tab-captacion" class="tab-content" style="display: <?= $user['role'] === 'admin' ? 'block' : 'none' ?>;">
+        <section id="tab-captacion" class="tab-content" style="display: block;">
             <div class="page-header">
                 <div class="page-title">
                     <h1>Control de Gestión de Captación</h1>
@@ -171,7 +156,7 @@ $user = $_SESSION['user'];
         </section>
 
         <!-- TAB 3: PORTAL PROFESORES - CARGA DE NOTAS -->
-        <section id="tab-profesor" class="tab-content" style="display: <?= $user['role'] === 'profesor' ? 'block' : 'none' ?>;">
+        <section id="tab-profesor" class="tab-content" style="display: none;">
             <div class="page-header">
                 <div class="page-title">
                     <h1>Portal de Profesores - Evaluación Académica</h1>

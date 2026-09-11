@@ -4,8 +4,8 @@
 // ============================================================================
 
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config/security.php';
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/config/security.php';
+require_once __DIR__ . '/config/database.php';
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -18,7 +18,6 @@ if ($action === 'login') {
         exit;
     }
     
-    // Usuarios predeterminados de prueba para inicio inmediato
     $defaultUsers = [
         [
             'id' => 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -38,12 +37,10 @@ if ($action === 'login') {
     
     $user = null;
     
-    // Buscar en Supabase primero
     $remoteUsers = supabase_request('GET', 'users?email=eq.' . urlencode($email));
     if (!empty($remoteUsers) && isset($remoteUsers[0])) {
         $user = $remoteUsers[0];
     } else {
-        // Fallback usuarios por defecto
         foreach ($defaultUsers as $u) {
             if (strtolower($u['email']) === strtolower($email)) {
                 $user = $u;
@@ -57,7 +54,6 @@ if ($action === 'login') {
         exit;
     }
     
-    // Validar contraseña plana contra hash o contraseña por defecto
     $isValid = false;
     if ($email === 'admin@santiagosoftware.com' && $password === 'admin123') {
         $isValid = true;
@@ -68,7 +64,7 @@ if ($action === 'login') {
     }
     
     if ($isValid) {
-        session_regenerate_id(true);
+        if (session_status() === PHP_SESSION_NONE) session_start();
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user'] = [
             'id' => $user['id'],
@@ -91,6 +87,7 @@ if ($action === 'login') {
 }
 
 if ($action === 'logout') {
+    if (session_status() === PHP_SESSION_NONE) session_start();
     if (isset($_SESSION['user']['id'])) {
         log_audit('users', 'LOGOUT', $_SESSION['user']['id'], null, ['email' => $_SESSION['user']['email']]);
     }
@@ -100,6 +97,7 @@ if ($action === 'logout') {
 }
 
 if ($action === 'current_user') {
+    if (session_status() === PHP_SESSION_NONE) session_start();
     if (!empty($_SESSION['user'])) {
         echo json_encode([
             'success' => true,
