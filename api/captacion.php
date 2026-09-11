@@ -248,7 +248,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-    $input = json_decode(file_get_contents('php_input') ?: '{}', true) ?: $_POST;
+    $input = json_decode(file_get_contents('php://input') ?: '{}', true) ?: $_POST;
     $action = $input['action'] ?? 'save';
     
     if ($action === 'toggle_flag') {
