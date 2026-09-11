@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/api/config/security.php';
+require_once __DIR__ . '/config/security.php';
 $user = $_SESSION['user'] ?? ['id' => 'demo', 'full_name' => 'Cargando Usuario...', 'role' => 'admin'];
 ?>
 <!DOCTYPE html>
