@@ -6,8 +6,9 @@
   },
   "routes": [
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/dashboard.php", "dest": "/api/dashboard.php" },
     { "src": "/dashboard", "dest": "/api/dashboard.php" },
+    { "src": "/dashboard.php", "dest": "/api/dashboard.php" },
+    { "src": "/login", "dest": "/api/index.php" },
     { "src": "/index.php", "dest": "/api/index.php" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/api/index.php" }

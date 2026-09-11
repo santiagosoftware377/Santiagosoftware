@@ -42,8 +42,8 @@ function checkCurrentUser() {
                     loadReincorporaciones();
                     loadAcademic();
                     if (currentUser.role === 'admin') loadAuditLogs();
-                } else if (!window.location.pathname.endsWith('index.php') && window.location.pathname !== '/') {
-                    window.location.href = 'index.php';
+                } else if (!window.location.pathname.endsWith('/') && !window.location.pathname.endsWith('login')) {
+                    window.location.href = './';
                 }
             }
         })
@@ -103,7 +103,7 @@ function bindEvents() {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('santiago_user');
             fetch('api/auth.php?action=logout')
-                .finally(() => window.location.href = 'index.php');
+                .finally(() => window.location.href = './');
         });
     }
 

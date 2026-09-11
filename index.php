@@ -67,7 +67,7 @@ require_once __DIR__ . '/api/config/security.php';
             .then(res => {
                 if (res.success) {
                     localStorage.setItem('santiago_user', JSON.stringify(res.user));
-                    window.location.href = 'dashboard.php';
+                    window.location.href = 'dashboard';
                 } else {
                     errDiv.textContent = res.error || 'Error al iniciar sesión';
                     errDiv.style.display = 'block';
@@ -80,7 +80,7 @@ require_once __DIR__ . '/api/config/security.php';
                     userObj = { id: 'demo2', email: email, full_name: 'Prof. Manuel Alfonzo', role: 'profesor' };
                 }
                 localStorage.setItem('santiago_user', JSON.stringify(userObj));
-                window.location.href = 'dashboard.php';
+                window.location.href = 'dashboard';
             });
         });
     </script>
